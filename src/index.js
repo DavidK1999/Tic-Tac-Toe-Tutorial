@@ -7,79 +7,95 @@ import ReactDOM from "react-dom"
 // Imports our styling
 import "./index.css"
 
-// React class Components are a bit overkill for when you're only rendering markup
-// That's why class Components are also known as "smart components" as they contain state
-// "state" lets components remember things, and keep track of data [1].
+// Ok, now it's time to create the game!
+// This commit will cover an important concept known as "lifting state"
+
+// Currently, our Square component keeps track of it's own state.
+// While we could pass the information up from each square into the board, this approach is generally not recommended.
+// There is an easier way to do this.
+// React is really good at flowing data (from parent to child), but it's much more difficult to lift that data (from child to parent)
+// Jump to [1] (Board Component)
+
+//[3]
+// Now we're back at the square component.
+// We're going to make some changes here in response to changes made in the board component
 
 class Square extends React.Component {
-  // JavaScript classes use a "constructor" to define information within the class
-  // ! DON"T GET CAUGHT UP WITH THIS BIT: The "super" is required because our Square class is a subclass of React component.
-  // What's important is that we can define our state within the constructor.
-  // Inside of our state, we have created a 'value' property that is set to null by default.
-  // We will modify the Square component to be able to modify this state in just a bit.
-  constructor(props) {
-    super(props)
-    // Note: State is an object, you can define key value pairs to model data
-    this.state = {
-      value: null,
-    }
-  }
-  render() {
-    // If you've ever played around with vanilla javascript or jQuery, you probably have used event handlers (onClick, onKeyDown, etc.)
-    // React also has eventHandlers that can be used to trigger events.
-    // In this example, we're using the onClick method to change the state of value from null to "X"
+  // We no longer need the constructor since the Square Component is no longer keeping track of it's own state.
 
-    // Note: the () => is a callback.
-    // This prevents the event from firing instantly WITHOUT user input.
-    // The callback waits for the event to occur (the click) before running the code after it (setting state)
+  render() {
     return (
-      <button className="square" onClick={() => this.setState({ value: "X" })}>
-        {/* Notice anything different?*/}
-        {/*  "this.state.value" used to be "this.props.value" */}
-        {/* This has been changed so that the content inside the button can now be dynamic instead of inherited */}
-        {/* Run npm start and click on the buttons, see what happens. */}
-        {/* Notice how the components update the content seamlessly */}
-        {this.state.value}
+      // This can get confusing but here we add an event listener "onClick" that will run a function called "onClick" that was passed down via props
+      // Remember we created a prop named onClick in the board component and stored inside of it a function
+      // It is now abstracted away into this.props.onClick() where this.props.onClick() is the value of the function passed in from the board component.
+      // run npm start (if you haven't already) and click on each of the squares, see what happens
+      <button className="square" onClick={() => this.props.onClick()}>
+        {this.props.value}
       </button>
+      
+      // Note: now that the square's values are determined by the Board the Square component is now referred to as a "controlled component"
+
     )
   }
 }
 
-// ! PAUSE. With whatever browser you're using, go to the extensions store and get the "React Developer Tools" extension.
-// Then go to inspect element and cick on "Components"
-// You should see a list of all your components. Click on one of them and look at the information on the right hand side.
-
-// NOTHING NEW BELOW IN THIS COMMIT
-
+// [1]
+// We are going to start with the Board first this time
+// Just like we added state to the Square component, we can add state to the Board component.
+// The benefit of this is that we instantiate squares inside of the board which means we can share state between the board and any squares inside of it.
+// All we have to do is pass down the board state into each square via props!
 class Board extends React.Component {
+  // Brining in our constructor to incorporate state
+  constructor(props) {
+    super(props)
+    this.state = {
+      // Setting a property "squares" to an array with 9 "null" values inside of it -> [null, null, null, null, null, null, null, null, null]
+      squares: Array(9).fill(null),
+    }
+  }
+
+  // [2]
+  // Ok! Here in our handleClick method we are doing a few important things...
+  // First, we are creating a copy of our squares array in our Board component's state. (Achieved through the slice method)
+  // Next, we are modifying the value of one of the squares in the array using the "i" parameter which refers to an index of the array.
+  // Finally, we are modifying the state of the board component by setting the squares array (in the constructor) to the modified squares array (the copy inside the handleClick function)
+
+  // Note: Creating a copy of the array is preferrable to changing the array contents. Here are a few reasons why...
+    // 1. Version history: Creating a copy of data lets you return to a different snapshot of an applications history and reuse it.
+    // 2. Detecting changes: If objects are mutated it's hard to see if it has changed. creating a copy lets you compare that copy to the original source to quickly calculate changes.
+    // 3. less rerenders: By knowing what has changed React can re render more efficiently. This saves performance.
+
+
+
+  // Jump back to the renderSquare method 
+
+  handleClick(i) {
+    const squares = this.state.squares.slice()
+    squares[i] = "X"
+    this.setState({ squares: squares })
+  }
+
   renderSquare(i) {
-    // [2] In this method, we are instantiating or "rendering" the Square Class Component.
-    // Classes are kind of like factories. They produce something.
-    // For example. the Square component is like a factory that produces buttons with the class name of square and optional extra information (via props).
-
-    // We can create as many Squares as we want by simply calling the Component as seen below <ComponentName propName={propValue} />
-    // It's customary to use self closing tag with a space before the "/>" to indicate that you're dealing with a React Component that takes in props
-
-    // Note: Here we are passing in the 'i' parameter from the renderSquare method into the Square Class Component.
-    return <Square value={i} />
+    return (
+      <Square
+        value={this.state.squares[i]}
+        // You can also pass functions down as props!
+        // Here we are passing a function "this.handleClick" and passing it the parameter "i".
+        // Let's take a look at the handleClick method! Jump to [2] (handleClick)
+        // note: The prop name is onClick, same as the event handler onClick. It's common to see this
+        // Jump to [2] (Square Component)
+        onClick={() => this.handleClick(i)}
+      />
+    )
   }
 
   render() {
-    // Note: You can define variables in the render method.
-    // These variables can be pulled within the return statement
     const status = "Next player: X"
 
     return (
-      // Note: JSX tags cannot be adjacent to eachother.
-      // You can only have one root element that has nested content.
-      // In this example we wrap each of the nested divs within ONE outer div.
       <div>
         <div className="status">{status}</div>
         <div className="board-row">
-          {/* Note: When dealing with JSX comments have to be wrapped inside of curly braces */}
-          {/* Methods can be called from inside the return statement */}
-          {/* Here, we are calling the render square method, passing in a numerical value for each one */}
-          {/* This is creating the board, and assigning each square a value */}
           {this.renderSquare(0)}
           {this.renderSquare(1)}
           {this.renderSquare(2)}
@@ -99,14 +115,6 @@ class Board extends React.Component {
   }
 }
 
-// Run npm start in your terminal to see the board
-// It's not pretty, but we'll get to that.
-// I encourage you to change the arguments in the renderSquare method and play around with the components themselves
-// This stage of the code will be saved in a commit so you can always revert to it.
-
-// This is our "root component"
-// Basically, this component contains all of our smaller components.
-// This componnet is then rendered to the page
 class Game extends React.Component {
   render() {
     return (
