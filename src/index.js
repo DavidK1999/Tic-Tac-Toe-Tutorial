@@ -7,7 +7,7 @@ import ReactDOM from "react-dom"
 // Imports our styling
 import "./index.css"
 
-// Jump to [1] (Board Component)
+// ! Jump to the end of the file
 
 function Square(props) {
   return (
@@ -17,37 +17,27 @@ function Square(props) {
   )
 }
 
-// [1] 
-// In order to get the game of tic tac toe rolling, we need to be able to mark Os on the board. Right now we can only mark Xs
-
 class Board extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
       squares: Array(9).fill(null),
-      // We can set a boolean to indicate that "X" is the first move.
-      // This is the default value until it is changed later.
+
       xIsNext: true,
-      // Jump to [2] (inside the handleClick method)
     }
   }
 
   handleClick(i) {
-      const squares = this.state.squares.slice()
-      // [2]
-    // Down below we are using the ternary operator (quick way to write a conditional statement)
-    // The "this.state.isNext" is the condition to be evaluated. To the right of the "?" is what occurs if the condition is true and to the right of the  ":" is what occurs if the condition is false.
-    // If this.state.isNext is true, we place an "X" in the square, otherwise we place an "O"
+    const squares = this.state.squares.slice()
+    // This returns the function after a value has been set in the table
+    // Otherwise You can repeatedly click part of the board and change its value
+    if (calculateWinner(squares) || squares[i]) {
+      return
+    }
     squares[i] = this.state.xIsNext ? "X" : "O"
     this.setState({
-        squares: squares,
-        // Now we have another thing to change inside of our Boards state.
-        // We need to replace the array with an updated copy of the array as before, but also we need to change the value of "xIsNext"
-        // The "!" is called a "bang" and it makes the value of whatever it is appended to opposite
-        // For example: !false is the same as true
-                        // !true is the same as false.
-        // We are changing the value of "xIsNext" to be the opposite of what is was after a square has been clicked.
-        // run npm start and click on the board. See what happens.
+      squares: squares,
+
       xIsNext: !this.state.xIsNext,
     })
   }
@@ -62,7 +52,17 @@ class Board extends React.Component {
   }
 
   render() {
-    const status = "Next player: X"
+    // Here we call the function calculateWinner, pass in the array of squares to determine the winner
+    const winner = calculateWinner(this.state.squares)
+    let status
+
+    // If the calculateWinnder has returned a value, we change the status to display the winnner
+    if (winner) {
+      status = "Winner: " + winner
+    } else {
+      // Continue the game
+      status = "Next player: " + (this.state.xIsNext ? "X" : "O")
+    }
 
     return (
       <div>
@@ -72,12 +72,12 @@ class Board extends React.Component {
           {this.renderSquare(1)}
           {this.renderSquare(2)}
         </div>
-        <div>
+        <div className="board-row">
           {this.renderSquare(3)}
           {this.renderSquare(4)}
           {this.renderSquare(5)}
         </div>
-        <div>
+        <div className="board-row">
           {this.renderSquare(6)}
           {this.renderSquare(7)}
           {this.renderSquare(8)}
@@ -101,6 +101,39 @@ class Game extends React.Component {
       </div>
     )
   }
+}
+
+// This is how the winner is calculated
+
+function calculateWinner(squares) {
+  // Two Dimensional Array  of all the winning combinations
+  // Each nested array represents a winning combo
+  const lines = [
+    [0, 1, 2],
+    [3, 4, 5],
+    [6, 7, 8],
+    [0, 3, 6],
+    [1, 4, 7],
+    [2, 5, 8],
+    [0, 4, 8],
+    [2, 4, 6],
+  ]
+  // Looping through each winning combo
+  console.log(squares)
+  for (let i = 0; i < lines.length; i++) {
+    // This assigns each column to a variable
+    // A is assigned to 0, 3, 6, 0, 1, 2, 0, 2
+    // B is assigned to 1, 4, 7, 3, 4, 5, 4, 4
+    // C is assigned to 2, 5, 8, 6, 7, 8, 8, 6
+    const [a, b, c] = lines[i]
+
+    // Here, we check if the same value is in each row of the column
+    if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
+      // If so we return the value (either an X or an O)
+      return squares[a]
+    }
+  }
+  return null
 }
 
 ReactDOM.render(<Game />, document.getElementById("root"))
