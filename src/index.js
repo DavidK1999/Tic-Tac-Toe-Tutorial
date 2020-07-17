@@ -7,25 +7,49 @@ import ReactDOM from "react-dom"
 // Imports our styling
 import "./index.css"
 
-// This is a React Class Component.
-// Components take in parameters which in React are referred to as as 'props' or 'properties [1]'
-// React Class Components also have the render method.
-// The Render method is simply a description of what to render to the virtual DOM
-// Behind the scenes, the render method is converting the "XML like" tags into an object that describes that will be rendered to the dom.
-// The "XML Like" tags are called "JSX" and make it easier and more intuitive for developers to represent these objects.
+// React class Components are a bit overkill for when you're only rendering markup
+// That's why class Components are also known as "smart components" as they contain state
+// "state" lets components remember things, and keep track of data [1].
 
 class Square extends React.Component {
+  // JavaScript classes use a "constructor" to define information within the class
+  // ! DON"T GET CAUGHT UP WITH THIS BIT: The "super" is required because our Square class is a subclass of React component.
+  // What's important is that we can define our state within the constructor.
+  // Inside of our state, we have created a 'value' property that is set to null by default.
+  // We will modify the Square component to be able to modify this state in just a bit.
+  constructor(props) {
+    super(props)
+    // Note: State is an object, you can define key value pairs to model data
+    this.state = {
+      value: null,
+    }
+  }
   render() {
-    //[1]
-    // The '{this.props.value}' is where the Square component is taking in information that it can use to display information within itself.
-    // Props are always inherited from a parent component.
-    // To better understand this, take a look at the Board Component [2].
-    return <button className="square">{this.props.value}</button>
+    // If you've ever played around with vanilla javascript or jQuery, you probably have used event handlers (onClick, onKeyDown, etc.)
+    // React also has eventHandlers that can be used to trigger events.
+    // In this example, we're using the onClick method to change the state of value from null to "X"
+
+    // Note: the () => is a callback.
+    // This prevents the event from firing instantly WITHOUT user input.
+    // The callback waits for the event to occur (the click) before running the code after it (setting state)
+    return (
+      <button className="square" onClick={() => this.setState({ value: "X" })}>
+        {/* Notice anything different?*/}
+        {/*  "this.state.value" used to be "this.props.value" */}
+        {/* This has been changed so that the content inside the button can now be dynamic instead of inherited */}
+        {/* Run npm start and click on the buttons, see what happens. */}
+        {/* Notice how the components update the content seamlessly */}
+        {this.state.value}
+      </button>
+    )
   }
 }
 
-// Since Class Components are JavaScript classes, they can also have methods (functions).
-// Class Component Methods come before the render method and the return statement
+// ! PAUSE. With whatever browser you're using, go to the extensions store and get the "React Developer Tools" extension.
+// Then go to inspect element and cick on "Components"
+// You should see a list of all your components. Click on one of them and look at the information on the right hand side.
+
+// NOTHING NEW BELOW IN THIS COMMIT
 
 class Board extends React.Component {
   renderSquare(i) {
